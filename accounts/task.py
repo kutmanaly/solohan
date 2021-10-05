@@ -9,7 +9,3 @@ def send_activation_mail(email, activation_code):
               message,
               'test@test.com',
               [email])
-
-
-
-

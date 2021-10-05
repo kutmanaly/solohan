@@ -2,13 +2,13 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from .serializers import (RegistrationSerializer,
-                          ActivationSerializer,
-                          LoginSerializer,
-                          ForgotPasswordSerializers,
-                          ChangePasswordSerializer)
+from accounts.serializers import (RegistrationSerializer,
+                                  ActivationSerializer,
+                                  LoginSerializer,
+                                  ForgotPasswordSerializers,
+                                  ChangePasswordSerializer, ForgotPasswordCompleteSerializers)
 
 
 class RegistrationView(APIView):
@@ -52,10 +52,11 @@ class ForgotPasswordView(APIView):
 
 
 class ForgotPasswordCompleteView(APIView):
+
     def post(self, request):
-        serializers = ForgotPasswordSerializers(data=request.data)
+        serializers = ForgotPasswordCompleteSerializers(data=request.data)
         if serializers.is_valid():
-            serializers.send_new_password()
+            serializers.set_new_password()
             return Response('Пароль успешно обновлён')
         return Response(serializers.errors, status=400)
 

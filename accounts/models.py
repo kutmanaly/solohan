@@ -32,6 +32,9 @@ class User(AbstractBaseUser):
     is_active = models.BooleanField('Активный?', default=False)
     is_staff = models.BooleanField('Админ?', default=False)
     activation_code = models.CharField('Код активации', max_length=8, blank=True)
+    bio = models.CharField(max_length=100, null=True, blank=True)
+    location = models.CharField(max_length=100, null=True, blank=True)
+    profile_picture = models.ImageField(upload_to="profile-pictures", null=True, blank=True)
 
     objects = UserManager()
 
@@ -39,8 +42,8 @@ class User(AbstractBaseUser):
     REQUIRED_FIELDS = ['name']
 
     class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
+        verbose_name = 'Профиль'
+        verbose_name_plural = 'Профили'
 
     def __str__(self):
         return self.email

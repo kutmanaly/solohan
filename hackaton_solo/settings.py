@@ -30,9 +30,9 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Celery Settings
-CELERY_TIMEZONE = "Asia/Bishkek"
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60
+# CELERY_TIMEZONE = "Asia/Bishkek"
+# CELERY_TASK_TRACK_STARTED = True
+# CELERY_TASK_TIME_LIMIT = 30 * 60
 # Celery Settings
 
 
@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'posts',
     'accounts',
     'drf_yasg',
-    'django_celery_results',
 
 ]
 
@@ -164,11 +163,8 @@ REST_FRAMEWORK = {
 }
 
 
-REDIS_HOST = '0.0.0.0'
-REDIS_POST = '6379'
-CELERY_BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_POST + '/0'
-CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
-CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_POST + '/0'
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_URL = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

@@ -3,15 +3,17 @@ from rest_framework import serializers
 from django.core.mail import send_mail
 from rest_framework.permissions import IsAuthenticated
 
+
 User = get_user_model()
 
 
 class RegistrationSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True)
-    password_confirm = serializers.CharField( required=True)
+    password_confirm = serializers.CharField(required=True)
     name = serializers.CharField(max_length=50, required=True)
     last_name = serializers.CharField(max_length=50, required=False)
+
 
     def validate_email(self, email):
         if User.objects.filter(email=email).exists():
@@ -94,14 +96,14 @@ class ForgotPasswordSerializers(serializers.Serializer):
             raise serializers.ValidationError('пользователь не зарегистрирован')
         return email
 
-    def send_cod(self):
+    def send_code(self):
         email = self.validated_data.get('email')
         user = User.objects.get(email=email)
         user.create_activation_code()
         send_mail(
             'Восстановление пароля',
             f'Ваш код подтверждения: {user.activation_code}',
-            'test@test.com'
+            'test@test.com',
             [email]
         )
 
@@ -112,14 +114,15 @@ class ForgotPasswordCompleteSerializers(serializers.Serializer):
     password = serializers.CharField(required=True)
     password_confirm = serializers.CharField(required=True)
 
-    def validated_email(self, email):
+
+    def validate_email(self, email):
         if not User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('пользователь не зарегистрирован')
+            raise serializers.ValidationError('Ползователь не зарегистрирован')
         return email
 
-    def validated_code(self, code):
+    def validate_code(self, code):
         if not User.objects.filter(activation_code=code).exists():
-            raise serializers.ValidationError('пользователь не найден')
+            raise serializers.ValidationError('Ползователь не зарегистрирован')
         return code
 
     def validate(self, attrs):
@@ -129,9 +132,8 @@ class ForgotPasswordCompleteSerializers(serializers.Serializer):
             raise serializers.ValidationError('Пароли не совпадают')
         return attrs
 
-    def set_new_pass(self):
-
-        email = self.validated_data('email')
+    def set_new_password(self):
+        email = self.validated_data.get('email')
         user = User.objects.get(email=email)
         password = self.validated_data.get('password')
         user.set_password(password)
@@ -147,13 +149,16 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context.get('request').user
         if not user.check_password(old_pass):
             raise serializers.ValidationError('Неверный пароль')
-        return  old_pass
+        return old_pass
 
     def validate(self, attrs):
         pass1 = attrs.get('password')
-        pass2 = attrs.get('password_comfirm')
+        print(pass1)
+        pass2 = attrs.get('password_confirm')
+        print(pass2)
+        print(attrs)
         if pass1 != pass2:
-            raise  serializers.ValidationError('Пароли не совпадают')
+            raise serializers.ValidationError('Пароли не совпадают')
         return attrs
 
     def set_new_pass(self):

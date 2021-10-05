@@ -1,53 +1,26 @@
 from rest_framework import serializers
-from .models import Post, Comment, Profile, PostRate, Follower
+
+from posts.models import Post, Comment, PostRate, User
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='get_username')
-    user_id = serializers.IntegerField(source='get_user_id')
-    followers_count = serializers.IntegerField(source='get_followers_count')
-    following_count = serializers.IntegerField(source='get_following_count')
-    profile_belongs_to_authenticated_user = serializers.BooleanField(source='get_profile_belongs_to_authenticated_user')
-    follow_status = serializers.CharField(source='get_follow_status')
-
-    class Meta:
-        model = Profile
-        fields = ('username', 'user_id', 'followers_count', 'following_count', 'profile_belongs_to_authenticated_user',
-                  'follow_status', 'first_name', 'last_name', 'bio', 'location')
-        read_only_fields = (
-        'username', 'user_id', 'followers_count', 'following_count', 'profile_belongs_to_authenticated_user',
-        'follow_status')
-
-
-class PostListSerializer(serializers.ModelSerializer):
+class PostListSerializers(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ('id', 'text', 'posted_by')
+        fields = ('text', 'posted_by', 'pub_date', 'image')
 
 
-class PostDetailSerializer(serializers.ModelSerializer):
+class PostDetailSerializers(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = '__all__'
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep['comments'] = CommentSerializer(instance.comments.all(), many=True).data
+        rep['comments'] = CommentSerializers(instance.comments.all(), many=True).data
         return rep
 
 
-class FollowerSerializer(serializers.ModelSerializer):
-    user = serializers.DictField(child=serializers.CharField(), source='get_user_info', read_only=True)
-    is_followed_by = serializers.DictField(child=serializers.CharField(), source='get_is_followed_by_info',
-                                           read_only=True)
-
-    class Meta:
-        model = Follower
-        fields = ('user', 'is_followed_by')
-        read_only_fields = ('user', 'is_followed_by')
-
-
-class CreatePostSerializer(serializers.ModelSerializer):
+class CreatePostSerializers(serializers.ModelSerializer):
     class Meta:
         model = Post
         exclude = ('posted_by',)
@@ -57,15 +30,39 @@ class CreatePostSerializer(serializers.ModelSerializer):
         validated_data['user'] = request.user
         return super().create(validated_data)
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['posts'] = PostDetailSerializers(instance.comments.all(), many=True).data
+        return rep
+    
 
-class CommentSerializer(serializers.ModelSerializer):
+class PostRateSerializers(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(write_only=True, queryset=User.objects.all())
+
+    class Meta:
+        model = PostRate
+        fields = '__all__'
+
+
+class CreatePostRateSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = PostRate
+        exclude = ('rated_by', 'rated_post')
+
+        def create(self, validated_data):
+            request = self.context.get('request')
+            validated_data['user'] = request.user
+            return super().create(validated_data)
+
+
+class CommentSerializers(serializers.ModelSerializer):
     post = serializers.PrimaryKeyRelatedField(write_only=True,
                                                      queryset=Post.objects.all())
     user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ('user', 'user', 'text', 'post', )
+        fields = ('user', 'text', 'post', )
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -73,25 +70,17 @@ class CommentSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class PostRateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PostRate
-        fields = ['liked', 'rated_post']
 
 
-class PostSerializer(serializers.ModelSerializer):
-    post_belongs_to_authenticated_user = serializers.BooleanField(source='get_post_belongs_to_authenticated_user',
-                                                                  read_only=True)
-    posted_by = serializers.DictField(child=serializers.CharField(), source='get_user', read_only=True)
-    pub_date = serializers.CharField(source='get_readable_date', read_only=True)
 
-    likes_count = serializers.IntegerField(source='get_likes_count', read_only=True)
-    dislikes_count = serializers.IntegerField(source='get_dislikes_count', read_only=True)
-    comments_count = serializers.IntegerField(source='get_comments_count', read_only=True)
 
-    class Meta:
-        model = Post
-        fields = ['id', 'post_belongs_to_authenticated_user', 'posted_by', 'pub_date', 'text', 'image',
-                  'in_reply_to_post', 'likes_count', 'dislikes_count', 'comments_count']
-        write_only_fields = ['text', 'image', 'in_reply_to_post']
+
+
+
+
+
+
+
+
+
 
